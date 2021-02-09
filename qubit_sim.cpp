@@ -56,8 +56,7 @@ void tensorProduct(double *tensor1, int tensor1DimX, int tensor1DimY, double *te
 
 int main() {
     int i;
-    double q0[2], q1[2], qdumy[4];
-    double q01[4];
+    double q0[2], q1[2], qdumy[4], q01[4];
     double entq2[4], entq2p[4];
     double *hadamard = new double[2*2];
     double *hadamardp = new double[4*4];
