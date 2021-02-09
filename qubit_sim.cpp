@@ -33,26 +33,34 @@ void vectorSwap(double *vectorSource, double *vectorTarget, int vectorDim)
         vectorTarget[i] = vectorSource[i];
 }
 
-void tensorProduct(double *vector1, int vector1Dim, double *vector2, int vector2Dim, double *result, int resultDim)
+void tensorProduct(double *tensor1, int tensor1DimX, int tensor1DimY, double *tensor2, int tensor2DimX, int tensor2DimY,  double *result, int resultDimX, int resultDimY)
 {
-    int i, j;
+    int t1x, t1y, t2x, t2y;
 
-    for ( i = 0 ; i < vector1Dim ; ++i )
+    for ( t1x = 0 ; t1x < tensor1DimX ; ++t1x )
     {
-        for( j = 0 ; j < vector2Dim ; ++j )
+        for ( t1y = 0 ; t1y < tensor1DimY ; ++t1y )
         {
-            if( (i*vector2Dim + j) >= resultDim )
-                break;
-            result[ i*2 + j ] = vector1[i] * vector2[j];
+    
+            for ( t2x = 0 ; t2x < tensor2DimX ; ++t2x )
+            {
+                for ( t2y = 0 ; t2y < tensor2DimY ; ++t2y )
+                {
+                    result[ ( ((t1y*tensor2DimY) + t2y) * (tensor1DimX*tensor2DimX) ) + (t1x*tensor2DimX + t2x) ] = tensor1[t1y*tensor1DimX+t1x] * tensor2[t2y*tensor2DimX+t2x];
+                }
+            }
         }
     }
+
 }
 
 int main() {
     int i;
-    double q0[2], q1[2], qdumy[2];
+    double q0[2], q1[2], qdumy[4];
+    double q01[4];
     double entq2[4], entq2p[4];
     double *hadamard = new double[2*2];
+    double *hadamardp = new double[4*4];
     double *controlNotGate = new double[4*4];
 
     q0[0] = q1[0] = 1.0;
@@ -67,20 +75,19 @@ int main() {
     controlNotGate[0] = controlNotGate[5] = 1;
     controlNotGate[11] = controlNotGate[14] = 1;
 
-    matrixvectormul(hadamard, 2, 2, q0, 2, qdumy, 2);
-    vectorSwap(qdumy, q0, 2);
+    tensorProduct(hadamard, 2, 2, hadamard, 2, 2, hadamardp, 4, 4);
+    tensorProduct(q0, 1, 2, q1, 1, 2, q01, 1, 4);
 
-    matrixvectormul(hadamard, 2, 2, q1, 2, qdumy, 2);
-    vectorSwap(qdumy, q1, 2);
-
-    tensorProduct(q0, 2, q1, 2, entq2, 4);
-
-    matrixvectormul(controlNotGate, 4, 4, entq2, 4, entq2p, 4);
+    matrixvectormul(hadamardp, 4, 4, q01, 4, qdumy, 4);
+    vectorSwap(qdumy, q01, 4);
+ 
+    matrixvectormul(controlNotGate, 4, 4, q01, 4, entq2, 4);
 
     for ( i = 0 ; i < 4 ; ++i )
-        entq2p[i] = pow(entq2p[i], 2);
+        entq2p[i] = pow(entq2[i], 2);
     printf("Pr(|00>) = %f, Pr(|01>) = %f, Pr(|10>) = %f, Pr(|11>) = %f\n", entq2p[0], entq2p[1], entq2p[2], entq2p[3]);
  
     delete hadamard;
+    delete hadamardp;
     delete controlNotGate;
 } 
